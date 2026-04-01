@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lunari — Next-Gen iGaming Platform</title>
+<title>Lunari Next-Gen iGaming Platform</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c3aed'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='serif' font-size='20' font-weight='800' fill='white'>L</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -39,7 +39,7 @@ const TARGET_IDS=new Set(GEOS.map(g=>g.numId));
 const TARGET_MAP=Object.fromEntries(GEOS.map(g=>[g.numId,g]));
 const HQ={lat:12.17,lng:-68.98};
 const STATS=[{value:"5",label:"Target Markets"},{value:"1.8B+",label:"Addressable Population"},{value:"Q3 2026",label:"Platform Launch"},{value:"150+",label:"Provider Target"}];
-const PROVIDERS=["Pragmatic Play","Evolution","Play'n GO","NetEnt","Microgaming","Yggdrasil","Red Tiger","Hacksaw Gaming","Push Gaming","Relax Gaming","BGaming","Endorphina","Wazdan","Thunderkick","ELK Studios","Nolimit City","Quickspin","Big Time Gaming","Blueprint","iSoftBet"];
+//const PROVIDERS=["Pragmatic Play","Evolution","Play'n GO","NetEnt","Microgaming","Yggdrasil","Red Tiger","Hacksaw Gaming","Push Gaming","Relax Gaming","BGaming","Endorphina","Wazdan","Thunderkick","ELK Studios","Nolimit City","Quickspin","Big Time Gaming","Blueprint","iSoftBet"];
 
 function InteractiveMap({activeGeo,setActiveGeo}){
 const svgRef=useRef(null);
