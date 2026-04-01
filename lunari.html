@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunari — Next-Gen iGaming Platform</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c3aed'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='serif' font-size='20' font-weight='800' fill='white'>L</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;background:#0a0812}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+::selection{background:rgba(124,58,237,0.4)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes pulse{0%,100%{opacity:0.03}50%{opacity:0.07}}
+@keyframes orbit{0%{transform:rotate(0deg) translateX(60px) rotate(0deg)}100%{transform:rotate(360deg) translateX(60px) rotate(-360deg)}}
+input:focus,textarea:focus{border-color:rgba(124,58,237,0.4)!important;outline:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useRef,useCallback}=React;
+
+const GEOS=[
+{id:"br",name:"Brazil",numId:"076",lat:-14.24,lng:-51.93,products:["Casino","Live Casino"],region:"Latin America",pop:"210M+",color:"#a78bfa"},
+{id:"mx",name:"Mexico",numId:"484",lat:23.63,lng:-102.55,products:["Casino","Live Casino"],region:"Latin America",pop:"130M+",color:"#818cf8"},
+{id:"in",name:"India",numId:"356",lat:20.59,lng:78.96,products:["Casino","Live Casino"],region:"South Asia",pop:"1.4B+",color:"#c084fc"},
+{id:"uz",name:"Uzbekistan",numId:"860",lat:41.38,lng:64.58,products:["Casino","Live Casino"],region:"CIS",pop:"35M+",color:"#a78bfa"},
+{id:"kz",name:"Kazakhstan",numId:"398",lat:48.02,lng:66.92,products:["Sportsbook"],region:"CIS",pop:"19M+",color:"#818cf8"},
+];
+const TARGET_IDS=new Set(GEOS.map(g=>g.numId));
+const TARGET_MAP=Object.fromEntries(GEOS.map(g=>[g.numId,g]));
+const HQ={lat:12.17,lng:-68.98};
+const STATS=[{value:"5",label:"Target Markets"},{value:"1.8B+",label:"Addressable Population"},{value:"Q3 2026",label:"Platform Launch"},{value:"150+",label:"Provider Target"}];
+const PROVIDERS=["Pragmatic Play","Evolution","Play'n GO","NetEnt","Microgaming","Yggdrasil","Red Tiger","Hacksaw Gaming","Push Gaming","Relax Gaming","BGaming","Endorphina","Wazdan","Thunderkick","ELK Studios","Nolimit City","Quickspin","Big Time Gaming","Blueprint","iSoftBet"];
+
+function InteractiveMap({activeGeo,setActiveGeo}){
+const svgRef=useRef(null);
+const[worldData,setWorldData]=useState(null);
+const[hoverCoords,setHoverCoords]=useState(null);
+const[hoverCountry,setHoverCountry]=useState(null);
+const[zoomLevel,setZoomLevel]=useState(1);
+const zoomB=useRef(null);
+const projR=useRef(null);
+const W=960,H=540;
+
+useEffect(()=>{
+fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+.then(r=>r.json()).then(topo=>{
+const countries=topojson.feature(topo,topo.objects.countries);
+const borders=topojson.mesh(topo,topo.objects.countries,(a,b)=>a!==b);
+setWorldData({countries,borders});
+}).catch(e=>console.error(e));
+},[]);
+
+useEffect(()=>{
+if(!svgRef.current)return;
+const svg=d3.select(svgRef.current);
+const proj=d3.geoNaturalEarth1().scale(165).translate([W/2,H/2+10]);
+projR.current=proj;
+const zoom=d3.zoom().scaleExtent([1,10]).translateExtent([[-300,-200],[W+300,H+200]])
+.on("zoom",ev=>{svg.select("#mg").attr("transform",ev.transform);setZoomLevel(ev.transform.k);});
+zoomB.current=zoom;
+svg.call(zoom);
+svg.on("mousemove",ev=>{
+const[mx,my]=d3.pointer(ev);const t=d3.zoomTransform(svgRef.current);
+const c=proj.invert(t.invert([mx,my]));
+if(c&&!isNaN(c[0])&&!isNaN(c[1]))setHoverCoords({lat:c[1].toFixed(2),lng:c[0].toFixed(2),x:mx,y:my});
+});
+svg.on("mouseleave",()=>{setHoverCoords(null);setHoverCountry(null);});
+return()=>{svg.on(".zoom",null);svg.on("mousemove",null);svg.on("mouseleave",null);};
+},[]);
+
+const flyTo=useCallback(geo=>{
+if(!svgRef.current||!projR.current||!zoomB.current)return;
+const svg=d3.select(svgRef.current);
+const[px,py]=projR.current([geo.lng,geo.lat]);const s=4;
+svg.transition().duration(1200).ease(d3.easeCubicInOut)
+.call(zoomB.current.transform,d3.zoomIdentity.translate(W/2-px*s,H/2-py*s).scale(s));
+setActiveGeo(geo);
+},[setActiveGeo]);
+
+const resetZoom=useCallback(()=>{
+if(!svgRef.current||!zoomB.current)return;
+d3.select(svgRef.current).transition().duration(800).ease(d3.easeCubicInOut)
+.call(zoomB.current.transform,d3.zoomIdentity);
+setActiveGeo(null);
+},[setActiveGeo]);
+
+const proj=d3.geoNaturalEarth1().scale(165).translate([W/2,H/2+10]);
+const pathG=d3.geoPath(proj);
+const hqP=proj([HQ.lng,HQ.lat]);
+
+return(
+<div style={{position:"relative"}}>
+<svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",maxHeight:560,cursor:"grab",borderRadius:14,background:"radial-gradient(ellipse at 50% 40%,#12101f,#0a0812)"}}>
+<defs>
+<radialGradient id="hqG" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#a78bfa" stopOpacity="0.5"/><stop offset="100%" stopColor="#a78bfa" stopOpacity="0"/></radialGradient>
+<filter id="mg2" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="cg" x="-2%" y="-2%" width="104%" height="104%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7c3aed" stopOpacity="0.7"/><stop offset="50%" stopColor="#a78bfa" stopOpacity="0.15"/><stop offset="100%" stopColor="#7c3aed" stopOpacity="0.7"/></linearGradient>
+{GEOS.map(g=><radialGradient key={`r-${g.id}`} id={`rg-${g.id}`} cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={g.color} stopOpacity="0.4"/><stop offset="100%" stopColor={g.color} stopOpacity="0"/></radialGradient>)}
+</defs>
+<g id="mg">
+<path d={pathG({type:"Sphere"})} fill="#0d0b19" stroke="rgba(167,139,250,0.06)" strokeWidth="0.5"/>
+<path d={pathG(d3.geoGraticule10())} fill="none" stroke="rgba(167,139,250,0.04)" strokeWidth="0.3"/>
+{worldData&&worldData.countries.features.map((f,i)=>{
+const cId=f.id;const isT=TARGET_IDS.has(cId);const gD=TARGET_MAP[cId];
+const isA=activeGeo&&gD&&activeGeo.id===gD.id;const isH=hoverCountry===cId;
+return <path key={i} d={pathG(f)}
+fill={isA?"rgba(124,58,237,0.35)":isT?"rgba(124,58,237,0.18)":isH?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)"}
+stroke={isA?"rgba(167,139,250,0.6)":isT?"rgba(167,139,250,0.3)":"rgba(255,255,255,0.08)"}
+strokeWidth={isT?"0.8":"0.3"} filter={isA?"url(#cg)":undefined}
+style={{cursor:isT?"pointer":"default",transition:"fill 0.4s,stroke 0.4s"}}
+onMouseEnter={()=>setHoverCountry(cId)} onMouseLeave={()=>setHoverCountry(null)}
+onClick={()=>{if(isT&&gD)flyTo(gD);}}/>;
+})}
+{worldData&&<path d={pathG(worldData.borders)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" strokeLinejoin="round"/>}
+{hqP&&GEOS.map(geo=>{
+const tp=proj([geo.lng,geo.lat]);if(!tp)return null;
+const[x1,y1]=hqP;const[x2,y2]=tp;const mx=(x1+x2)/2;const my=Math.min(y1,y2)-Math.abs(x2-x1)*0.18;
+const pD=`M${x1},${y1} Q${mx},${my} ${x2},${y2}`;const isA=activeGeo?.id===geo.id;
+return <g key={`a-${geo.id}`}>
+<path d={pD} fill="none" stroke="url(#ag)" strokeWidth={isA?"1.5":"0.8"} strokeDasharray="5 5" opacity={isA?0.9:0.2} style={{transition:"opacity 0.5s"}}/>
+<circle r="2.5" fill={geo.color} opacity={isA?1:0.4}><animateMotion dur={`${3+Math.random()*2}s`} repeatCount="indefinite" path={pD}/></circle>
+{isA&&<circle r="1.5" fill="#fff" opacity="0.7"><animateMotion dur={`${4+Math.random()*2}s`} repeatCount="indefinite" path={pD}/></circle>}
+</g>;
+})}
+{hqP&&<g><circle cx={hqP[0]} cy={hqP[1]} r="24" fill="url(#hqG)"/><circle cx={hqP[0]} cy={hqP[1]} r="5" fill="#7c3aed" stroke="#c4b5fd" strokeWidth="1.5"/>
+<text x={hqP[0]} y={hqP[1]-11} textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="700" fontFamily="'DM Sans',sans-serif" style={{textShadow:"0 0 8px rgba(124,58,237,0.6)"}}>CURAÇAO HQ</text></g>}
+{GEOS.map((geo,i)=>{
+const p=proj([geo.lng,geo.lat]);if(!p)return null;const[cx,cy]=p;const isA=activeGeo?.id===geo.id;
+return <g key={`m-${geo.id}`} style={{cursor:"pointer"}} onClick={()=>flyTo(geo)}>
+<circle cx={cx} cy={cy} r="45" fill={`url(#rg-${geo.id})`} opacity={isA?1:0.4} style={{transition:"opacity 0.5s"}}/>
+<circle cx={cx} cy={cy} r={isA?8:6} fill={geo.color} opacity="0.85" filter="url(#mg2)"><animate attributeName="r" values={isA?"8;11;8":"6;8;6"} dur="3s" begin={`${i*0.4}s`} repeatCount="indefinite"/></circle>
+<circle cx={cx} cy={cy} r="3.5" fill="#fff" opacity="0.9"/>
+<circle cx={cx} cy={cy} r="6" fill="none" stroke={geo.color} strokeWidth="1.2" opacity="0"><animate attributeName="r" values="6;30" dur="2.5s" begin={`${i*0.5}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0" dur="2.5s" begin={`${i*0.5}s`} repeatCount="indefinite"/></circle>
+<g><rect x={cx+14} y={cy-14} width={geo.name.length*7.5+20} height="26" rx="6" fill="rgba(10,8,18,0.92)" stroke={isA?geo.color:"rgba(167,139,250,0.2)"} strokeWidth="0.8"/>
+<text x={cx+24} y={cy+2} fill={isA?"#e9d5ff":"#c4b5fd"} fontSize="10" fontWeight="600" fontFamily="'DM Sans',sans-serif">{geo.name}</text></g>
+</g>;
+})}
+</g>
+{hoverCoords&&<g style={{pointerEvents:"none"}}><rect x={hoverCoords.x+16} y={hoverCoords.y-10} width="150" height="22" rx="5" fill="rgba(10,8,18,0.9)" stroke="rgba(167,139,250,0.15)" strokeWidth="0.5"/>
+<text x={hoverCoords.x+24} y={hoverCoords.y+5} fill="#7c3aed" fontSize="10" fontFamily="'JetBrains Mono',monospace" fontWeight="500">
+{Math.abs(parseFloat(hoverCoords.lat)).toFixed(2)}°{parseFloat(hoverCoords.lat)>=0?"N":"S"} {Math.abs(parseFloat(hoverCoords.lng)).toFixed(2)}°{parseFloat(hoverCoords.lng)>=0?"E":"W"}</text></g>}
+<g style={{pointerEvents:"none"}}><rect x={W-62} y={H-30} width="50" height="20" rx="4" fill="rgba(10,8,18,0.7)" stroke="rgba(167,139,250,0.1)" strokeWidth="0.5"/>
+<text x={W-37} y={H-16} textAnchor="middle" fill="rgba(167,139,250,0.4)" fontSize="10" fontFamily="'JetBrains Mono',monospace">{zoomLevel.toFixed(1)}x</text></g>
+{!worldData&&<text x={W/2} y={H/2} textAnchor="middle" fill="#6b7280" fontSize="14" fontFamily="'DM Sans',sans-serif">Loading world map...</text>}
+</svg>
+<div style={{display:"flex",gap:8,justifyContent:"center",marginTop:18,flexWrap:"wrap"}}>
+<button onClick={resetZoom} style={{padding:"7px 16px",borderRadius:100,cursor:"pointer",background:!activeGeo?"rgba(124,58,237,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${!activeGeo?"rgba(124,58,237,0.25)":"rgba(255,255,255,0.06)"}`,color:!activeGeo?"#c4b5fd":"#6b7280",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",transition:"all 0.3s"}}>All Markets</button>
+{GEOS.map(geo=><button key={geo.id} onClick={()=>flyTo(geo)} style={{padding:"7px 16px",borderRadius:100,cursor:"pointer",background:activeGeo?.id===geo.id?"rgba(124,58,237,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${activeGeo?.id===geo.id?"rgba(124,58,237,0.25)":"rgba(255,255,255,0.06)"}`,color:activeGeo?.id===geo.id?"#c4b5fd":"#6b7280",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",transition:"all 0.3s"}}>
+<span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:geo.color,marginRight:7,verticalAlign:"middle"}}/>{geo.name}</button>)}
+</div>
+{activeGeo&&<div style={{position:"absolute",top:16,right:16,width:240,background:"rgba(10,8,18,0.94)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:14,padding:"20px 22px",backdropFilter:"blur(20px)",animation:"fadeInUp 0.35s ease"}}>
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+<div style={{width:12,height:12,borderRadius:"50%",background:activeGeo.color,boxShadow:`0 0 14px ${activeGeo.color}`}}/>
+<span style={{color:"#f5f3ff",fontSize:17,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>{activeGeo.name}</span></div>
+{[["Region",activeGeo.region],["Population",activeGeo.pop],["Products",activeGeo.products.join(", ")],["Coordinates",`${activeGeo.lat}°, ${activeGeo.lng}°`]].map(([k,v])=>
+<div key={k} style={{display:"flex",justifyContent:"space-between",marginBottom:9}}>
+<span style={{color:"#6b7280",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>{k}</span>
+<span style={{color:"#d1d5db",fontSize:12,fontWeight:500,fontFamily:k==="Coordinates"?"'JetBrains Mono',monospace":"'DM Sans',sans-serif"}}>{v}</span></div>)}
+</div>}
+</div>);
+}
+
+function GlowIcon({children,size=48}){return<div style={{width:size,height:size,borderRadius:14,flexShrink:0,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.15)",display:"flex",alignItems:"center",justifyContent:"center",color:"#a78bfa",fontSize:size*0.38,fontWeight:800,fontFamily:"'Playfair Display',serif"}}>{children}</div>;}
+function ProductCard({symbol,title,desc,features,badge}){const[h,setH]=useState(false);return<div onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{background:h?"rgba(124,58,237,0.05)":"rgba(255,255,255,0.015)",border:`1px solid ${h?"rgba(167,139,250,0.22)":"rgba(255,255,255,0.05)"}`,borderRadius:18,padding:"34px 28px",flex:1,minWidth:270,transition:"all 0.5s cubic-bezier(0.4,0,0.2,1)",transform:h?"translateY(-5px)":"translateY(0)",position:"relative",overflow:"hidden"}}>
+{badge&&<div style={{position:"absolute",top:14,right:14,padding:"3px 11px",borderRadius:100,background:"rgba(124,58,237,0.12)",border:"1px solid rgba(124,58,237,0.2)",color:"#a78bfa",fontSize:10,fontWeight:700}}>{badge}</div>}
+<div style={{position:"absolute",top:-40,right:-40,width:120,height:120,borderRadius:"50%",background:`radial-gradient(circle,rgba(124,58,237,${h?0.07:0.02}),transparent 70%)`,transition:"background 0.5s"}}/>
+<GlowIcon size={50}>{symbol}</GlowIcon>
+<h3 style={{color:"#f5f3ff",fontSize:20,fontWeight:700,margin:"18px 0 10px",fontFamily:"'Playfair Display',serif"}}>{title}</h3>
+<p style={{color:"#9ca3af",fontSize:13,lineHeight:1.7,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>{desc}</p>
+<div style={{display:"flex",flexDirection:"column",gap:8}}>{features.map((f,i)=><div key={i} style={{display:"flex",alignItems:"flex-start",gap:9}}><div style={{width:16,height:16,borderRadius:4,flexShrink:0,marginTop:1,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.12)",display:"flex",alignItems:"center",justifyContent:"center",color:"#7c3aed",fontSize:9}}>✓</div><span style={{color:"#d1d5db",fontSize:12.5,fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}>{f}</span></div>)}</div>
+</div>;}
+function TechBlock({symbol,title,desc}){const[h,setH]=useState(false);return<div onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{display:"flex",gap:14,padding:"16px 14px",borderRadius:12,transition:"background 0.3s",background:h?"rgba(124,58,237,0.04)":"transparent"}}><GlowIcon size={42}>{symbol}</GlowIcon><div><h4 style={{color:"#f5f3ff",fontSize:14.5,fontWeight:600,marginBottom:3,fontFamily:"'DM Sans',sans-serif"}}>{title}</h4><p style={{color:"#9ca3af",fontSize:12.5,lineHeight:1.65,margin:0,fontFamily:"'DM Sans',sans-serif"}}>{desc}</p></div></div>;}
+function CountUp({target}){const[val,setVal]=useState("0");const ref=useRef(null);const started=useRef(false);useEffect(()=>{const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting&&!started.current){started.current=true;const n=parseInt(target);if(!isNaN(n)&&n<1000){let c=0;const s=Math.max(1,Math.floor(n/40));const iv=setInterval(()=>{c+=s;if(c>=n){c=n;clearInterval(iv);}setVal(c.toString());},30);}else setVal(target);}},{threshold:0.5});if(ref.current)obs.observe(ref.current);return()=>obs.disconnect();},[target]);return<span ref={ref}>{val}</span>;}
+
+function LunariLanding(){
+const[scrolled,setScrolled]=useState(false);const[activeGeo,setActiveGeo]=useState(null);
+const[form,setForm]=useState({company:"",email:"",type:"",message:""});const[submitted,setSubmitted]=useState(false);
+const[provOff,setProvOff]=useState(0);
+useEffect(()=>{const fn=()=>setScrolled(window.scrollY>40);window.addEventListener("scroll",fn);return()=>window.removeEventListener("scroll",fn);},[]);
+useEffect(()=>{let raf;const tick=()=>{setProvOff(p=>p-0.5);raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);return()=>cancelAnimationFrame(raf);},[]);
+
+return(
+<div style={{background:"#0a0812",color:"#f5f3ff",minHeight:"100vh",fontFamily:"'DM Sans',sans-serif",overflowX:"hidden"}}>
+<nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,padding:"0 48px",height:68,display:"flex",alignItems:"center",justifyContent:"space-between",background:scrolled?"rgba(10,8,18,0.92)":"transparent",backdropFilter:scrolled?"blur(24px)":"none",borderBottom:scrolled?"1px solid rgba(167,139,250,0.08)":"none",transition:"all 0.4s"}}>
+<div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",fontFamily:"'Playfair Display',serif"}}>L</div><span style={{fontSize:20,fontWeight:700,color:"#f5f3ff",fontFamily:"'Playfair Display',serif"}}>Lunari</span></div>
+<div style={{display:"flex",gap:26,alignItems:"center"}}>
+{["Markets","Products","Technology","Partners"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
+<a href="#partners" style={{padding:"8px 20px",borderRadius:8,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:13,fontWeight:600,textDecoration:"none",boxShadow:"0 0 20px rgba(124,58,237,0.25)"}}>Become a Partner</a>
+</div></nav>
+
+<section style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"120px 48px 80px",overflow:"hidden"}}>
+<div style={{position:"absolute",top:"10%",left:"50%",transform:"translateX(-50%)",width:700,height:700,borderRadius:"50%",background:"radial-gradient(circle,rgba(124,58,237,0.06),transparent 65%)",pointerEvents:"none"}}/>
+<div style={{position:"absolute",top:"50%",left:"50%",width:0,height:0,pointerEvents:"none"}}>{[0,1,2].map(i=><div key={i} style={{position:"absolute",width:4,height:4,borderRadius:"50%",background:"#7c3aed",opacity:0.3,animation:`orbit ${8+i*4}s linear infinite`,animationDelay:`${i*2}s`}}/>)}</div>
+<div style={{position:"absolute",inset:0,pointerEvents:"none",backgroundImage:"radial-gradient(rgba(167,139,250,0.04) 1px,transparent 1px)",backgroundSize:"48px 48px",animation:"pulse 8s ease infinite"}}/>
+<div style={{padding:"5px 18px",borderRadius:100,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.2)",marginBottom:28,animation:"fadeInUp 0.8s ease"}}><span style={{color:"#a78bfa",fontSize:12,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase"}}>Launching Q3 2026 · Curaçao Licensed</span></div>
+<h1 style={{fontSize:"clamp(36px,5.2vw,66px)",fontWeight:800,textAlign:"center",lineHeight:1.06,maxWidth:840,marginBottom:24,fontFamily:"'Playfair Display',serif",animation:"fadeInUp 0.8s ease 0.1s both"}}>Next-Generation{" "}<span style={{background:"linear-gradient(135deg,#c4b5fd,#7c3aed,#a78bfa,#c4b5fd)",backgroundSize:"300% auto",animation:"shimmer 5s linear infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGaming Platform</span>{" "}for Emerging Markets</h1>
+<p style={{fontSize:17,color:"#9ca3af",textAlign:"center",maxWidth:560,lineHeight:1.75,marginBottom:44,animation:"fadeInUp 0.8s ease 0.2s both"}}>AI-driven player protection. Multi-market compliance. Seamless provider integrations across Latin America, India, and CIS.</p>
+<div style={{display:"flex",gap:14,animation:"fadeInUp 0.8s ease 0.3s both"}}><a href="#partners" style={{padding:"13px 32px",borderRadius:10,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:15,fontWeight:600,textDecoration:"none",boxShadow:"0 4px 30px rgba(124,58,237,0.3)"}}>Partner With Us</a><a href="#markets" style={{padding:"13px 32px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",color:"#d1d5db",fontSize:15,fontWeight:600,textDecoration:"none"}}>Explore Markets</a></div>
+<div style={{display:"flex",gap:40,marginTop:72,flexWrap:"wrap",justifyContent:"center",animation:"fadeInUp 0.8s ease 0.4s both"}}>{STATS.map((s,i)=><div key={i} style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:"#c4b5fd",fontFamily:"'Playfair Display',serif"}}><CountUp target={s.value}/></div><div style={{fontSize:12,color:"#6b7280",marginTop:3,fontWeight:500}}>{s.label}</div></div>)}</div>
+</section>
+
+<section id="markets" style={{padding:"100px 48px"}}><div style={{textAlign:"center",marginBottom:44}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Global Reach</span><h2 style={{fontSize:"clamp(26px,3.4vw,42px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:12}}>Market Coverage</h2><p style={{color:"#9ca3af",fontSize:15,maxWidth:500,margin:"0 auto",lineHeight:1.7}}>Drag, zoom, and click to explore. Target markets highlighted with real-time coordinates.</p></div>
+<div style={{maxWidth:1020,margin:"0 auto",border:"1px solid rgba(255,255,255,0.04)",borderRadius:20,padding:"20px 16px 14px",background:"rgba(255,255,255,0.008)"}}><InteractiveMap activeGeo={activeGeo} setActiveGeo={setActiveGeo}/></div></section>
+
+<section id="products" style={{padding:"100px 48px"}}><div style={{textAlign:"center",marginBottom:48}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Product Verticals</span><h2 style={{fontSize:"clamp(26px,3.4vw,42px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:12}}>Complete Gaming Ecosystem</h2><p style={{color:"#9ca3af",fontSize:15,maxWidth:520,margin:"0 auto",lineHeight:1.7}}>Casino, live dealer, and sportsbook experiences tailored for each market.</p></div>
+<div style={{display:"flex",gap:20,maxWidth:1100,margin:"0 auto",flexWrap:"wrap"}}>
+<ProductCard symbol="C" title="Online Casino" desc="Premium slots and table games curated for emerging market preferences with localized content and payments." features={["5,000+ games from 150+ providers","AI-powered personalization engine","Localized lobbies per market","Multi-currency and crypto support"]}/>
+<ProductCard symbol="L" title="Live Casino" desc="Immersive live dealer experiences with dedicated tables for LatAm, Indian, and CIS player bases." features={["Native-language dealer tables","Andar Bahar, Teen Patti, Baccarat","24/7 multilingual coverage","Sub-second streaming latency"]}/>
+<ProductCard symbol="S" title="Sportsbook" badge="KZ MARKET" desc="Comprehensive pre-match and live betting focused on the regulated Kazakhstan market." features={["30+ sports, 60K+ monthly events","In-play with cash-out","Regional sport prioritization","Full regulatory compliance"]}/>
+</div></section>
+
+<section id="technology" style={{padding:"100px 48px",background:"linear-gradient(180deg,transparent,rgba(124,58,237,0.02) 50%,transparent)"}}>
+<div style={{maxWidth:1100,margin:"0 auto",display:"flex",gap:52,flexWrap:"wrap",alignItems:"flex-start"}}>
+<div style={{flex:"1 1 460px"}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Platform Architecture</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Built for Scale, <span style={{color:"#a78bfa"}}>Secured by AI</span></h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7,marginBottom:24}}>Proprietary stack for multi-jurisdictional compliance, real-time fraud prevention, and sub-second processing.</p>
+<TechBlock symbol="F" title="AI Fraud Detection" desc="Hybrid ML: XGBoost + Random Forest + LSTM with configurable rules. 200+ behavioral signals in real-time."/>
+<TechBlock symbol="K" title="Multi-Market Compliance" desc="Automated KYC/AML per jurisdiction. Built-in responsible gambling and regulatory reporting."/>
+<TechBlock symbol="A" title="Universal Aggregation API" desc="Single-API provider integration. GCB, RGS, proprietary protocols. 48h average integration."/>
+<TechBlock symbol="P" title="Omni-Payment Hub" desc="200+ methods: PIX, UPI, local cards, crypto wallets, carrier billing across all geos."/>
+<TechBlock symbol="I" title="Microservices Architecture" desc="Cloud-native, 99.99% uptime. Independent per-market scaling, sub-50ms API response."/>
+</div>
+<div style={{flex:"1 1 380px",minWidth:320}}>
+<div style={{background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:18,padding:"26px 24px",position:"relative",overflow:"hidden"}}>
+<div style={{position:"absolute",top:-50,right:-50,width:150,height:150,borderRadius:"50%",background:"radial-gradient(circle,rgba(124,58,237,0.07),transparent 70%)"}}/>
+<h4 style={{color:"#a78bfa",fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:20}}>Architecture Overview</h4>
+{[["Player Layer",["Web App","Mobile iOS/Android","Telegram Mini App"]],["Gateway",["CDN + WAF","Load Balancer","API Gateway"]],["Core Services",["Game Aggregator","Wallet Engine","Bonus System","Sportsbook"]],["Intelligence",["Fraud Detection AI","Player Analytics","Recommendations"]],["Data & Compliance",["Multi-Region DB","KYC/AML Pipeline","Regulatory Reports"]]].map(([label,items],i,arr)=>
+<div key={i} style={{marginBottom:i<arr.length-1?4:0}}><div style={{color:"#7c3aed",fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}}>{label}</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{items.map((item,j)=><span key={j} style={{padding:"3px 10px",borderRadius:5,background:"rgba(124,58,237,0.06)",border:"1px solid rgba(124,58,237,0.1)",color:"#c4b5fd",fontSize:10.5,fontWeight:500}}>{item}</span>)}</div>{i<arr.length-1&&<div style={{textAlign:"center",color:"rgba(124,58,237,0.18)",fontSize:13,margin:"5px 0 2px"}}>↓</div>}</div>)}
+</div>
+<div style={{marginTop:18,display:"flex",gap:8,flexWrap:"wrap"}}>{["Curaçao eGaming","GLI-19 Tested","ISO 27001","PCI DSS L1"].map((b,i)=><div key={i} style={{padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",color:"#9ca3af",fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><span style={{color:"#22c55e",fontSize:10}}>✓</span>{b}</div>)}</div>
+</div></div></section>
+
+<section style={{padding:"56px 0",overflow:"hidden"}}><div style={{textAlign:"center",marginBottom:32}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase"}}>Integration Pipeline</span><h3 style={{fontSize:21,fontWeight:700,marginTop:8,fontFamily:"'Playfair Display',serif"}}>Provider Ecosystem</h3></div>
+<div style={{overflow:"hidden",position:"relative"}}><div style={{position:"absolute",left:0,top:0,bottom:0,width:100,background:"linear-gradient(90deg,#0a0812,transparent)",zIndex:2}}/><div style={{position:"absolute",right:0,top:0,bottom:0,width:100,background:"linear-gradient(-90deg,#0a0812,transparent)",zIndex:2}}/>
+<div style={{display:"flex",gap:20,whiteSpace:"nowrap",transform:`translateX(${provOff%(PROVIDERS.length*156)}px)`}}>{[...PROVIDERS,...PROVIDERS,...PROVIDERS].map((p,i)=><div key={i} style={{padding:"11px 24px",borderRadius:9,flexShrink:0,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.045)",color:"#6b7280",fontSize:12.5,fontWeight:600}}>{p}</div>)}</div></div></section>
+
+<section id="partners" style={{padding:"100px 48px",background:"linear-gradient(180deg,transparent,rgba(124,58,237,0.03))"}}><div style={{maxWidth:640,margin:"0 auto"}}><div style={{textAlign:"center",marginBottom:40}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>For Providers & Partners</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:12}}>Join Lunari at Launch</h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7}}>Early partners receive priority placement, reduced revenue share, and dedicated tech support.</p></div>
+{!submitted?<div style={{background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:20,padding:34}}>
+<div style={{display:"flex",gap:12,marginBottom:16}}>{[["Company Name *","company","Your company"],["Business Email *","email","partner@company.com"]].map(([l,k,ph])=><div key={k} style={{flex:1}}><label style={{color:"#6b7280",fontSize:10,fontWeight:600,marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:"0.06em"}}>{l}</label><input value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} placeholder={ph} style={{width:"100%",padding:"10px 13px",borderRadius:9,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",color:"#f5f3ff",fontSize:13.5,fontFamily:"'DM Sans',sans-serif"}}/></div>)}</div>
+<div style={{marginBottom:16}}><label style={{color:"#6b7280",fontSize:10,fontWeight:600,marginBottom:5,display:"block",textTransform:"uppercase",letterSpacing:"0.06em"}}>Partnership Type</label><div style={{display:"flex",gap:7,flexWrap:"wrap"}}>{["Game Provider","Live Casino","Sportsbook Feed","Payment Provider","Affiliate Platform"].map(t=><button key={t} onClick={()=>setForm({...form,type:t})} style={{padding:"6px 14px",borderRadius:100,cursor:"pointer",background:form.type===t?"rgba(124,58,237,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${form.type===t?"rgba(124,58,237,0.25)":"rgba(255,255,255,0.06)"}`,color:form.type===t?"#c4b5fd":"#6b7280",fontSize:12,fontWeight:500,fontFamily:"'DM Sans',sans-serif",transition:"all 0.3s"}}>{t}</button>)}</div></div>
+<div style={{marginBottom:20}}><label style={{color:"#6b7280",fontSize:10,fontWeight:600,marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:"0.06em"}}>Message</label><textarea value={form.message} onChange={e=>setForm({...form,message:e.target.value})} placeholder="Portfolio and integration capabilities..." rows={3} style={{width:"100%",padding:"10px 13px",borderRadius:9,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",color:"#f5f3ff",fontSize:13.5,fontFamily:"'DM Sans',sans-serif",resize:"vertical",lineHeight:1.6}}/></div>
+<button onClick={()=>{if(form.company&&form.email)setSubmitted(true);}} style={{width:"100%",padding:"12px",borderRadius:9,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:15,fontWeight:700,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",boxShadow:"0 4px 30px rgba(124,58,237,0.25)"}}>Submit Partnership Inquiry</button>
+</div>:
+<div style={{textAlign:"center",padding:52,background:"rgba(124,58,237,0.04)",border:"1px solid rgba(124,58,237,0.12)",borderRadius:20}}><GlowIcon size={54}>✓</GlowIcon><h3 style={{fontSize:21,fontWeight:700,fontFamily:"'Playfair Display',serif",margin:"18px 0 8px"}}>Thank you for your interest</h3><p style={{color:"#9ca3af",fontSize:14}}>Our team will reach out within 48 hours.</p></div>}
+</div></section>
+
+<footer style={{padding:44,borderTop:"1px solid rgba(255,255,255,0.04)"}}><div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:28}}>
+<div style={{maxWidth:340}}><div style={{display:"flex",alignItems:"center",gap:9,marginBottom:12}}><div style={{width:28,height:28,borderRadius:7,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff",fontFamily:"'Playfair Display',serif"}}>L</div><span style={{fontSize:16,fontWeight:700,color:"#f5f3ff",fontFamily:"'Playfair Display',serif"}}>Lunari</span></div><p style={{color:"#4b5563",fontSize:11,lineHeight:1.7}}>Operated by Lunari Entertainment N.V., registered and licensed in Curaçao under the eGaming framework.</p></div>
+<div style={{display:"flex",gap:40}}>{[["Company",["About","Careers","Contact"]],["Legal",["Privacy Policy","Terms of Service","Responsible Gaming","AML Policy"]]].map(([t,ls])=><div key={t}><h5 style={{color:"#6b7280",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>{t}</h5><div style={{display:"flex",flexDirection:"column",gap:6}}>{ls.map(l=><a key={l} href="#" style={{color:"#4b5563",fontSize:12,textDecoration:"none",transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#9ca3af"} onMouseLeave={e=>e.target.style.color="#4b5563"}>{l}</a>)}</div></div>)}</div>
+<div><div style={{padding:"8px 16px",borderRadius:9,background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",color:"#6b7280",fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:6}}><span style={{color:"#22c55e"}}>●</span>Curaçao eGaming License</div><p style={{color:"#374151",fontSize:10,marginTop:12,textAlign:"right"}}>© 2026 Lunari Entertainment N.V.</p></div>
+</div></footer>
+</div>);}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LunariLanding/>);
+</script>
+</body>
+</html>
