@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lunari Next-Gen iGaming Platform</title>
+<title>Lunari — Next-Gen iGaming Operator</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c3aed'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='serif' font-size='20' font-weight='800' fill='white'>L</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.2/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 html,body,#root{margin:0;padding:0;width:100%;min-height:100vh;background:#0a0812}
@@ -38,150 +37,10 @@ input:focus,textarea:focus{border-color:rgba(124,58,237,0.4)!important;outline:n
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const{useState,useEffect,useRef,useCallback}=React;
+const{useState,useEffect,useRef}=React;
 
-const GEOS=[
-{id:"br",name:"Brazil",numId:"076",lat:-14.24,lng:-51.93,products:["Casino","Live Casino"],region:"Latin America",pop:"210M+",color:"#a78bfa"},
-{id:"mx",name:"Mexico",numId:"484",lat:23.63,lng:-102.55,products:["Casino","Live Casino"],region:"Latin America",pop:"130M+",color:"#818cf8"},
-{id:"in",name:"India",numId:"356",lat:20.59,lng:78.96,products:["Casino","Live Casino"],region:"South Asia",pop:"1.4B+",color:"#c084fc"},
-{id:"uz",name:"Uzbekistan",numId:"860",lat:41.38,lng:64.58,products:["Casino","Live Casino"],region:"CIS",pop:"35M+",color:"#a78bfa"},
-{id:"kz",name:"Kazakhstan",numId:"398",lat:48.02,lng:66.92,products:["Sportsbook"],region:"CIS",pop:"19M+",color:"#818cf8"},
-];
-const TARGET_IDS=new Set(GEOS.map(g=>g.numId));
-const TARGET_MAP=Object.fromEntries(GEOS.map(g=>[g.numId,g]));
-const HQ={lat:12.17,lng:-68.98};
-const STATS=[{value:"5",label:"Target Markets"},{value:"1.8B+",label:"Addressable Population"},{value:"Q3 2026",label:"Platform Launch"},{value:"150+",label:"Provider Target"}];
+const STATS=[{value:"5",label:"Target Markets"},{value:"1.8B+",label:"Addressable Population"},{value:"Q3 2026",label:"Operator Launch"},{value:"150+",label:"Provider Target"}];
 
-
-function InteractiveMap({activeGeo,setActiveGeo}){
-const svgRef=useRef(null);
-const[worldData,setWorldData]=useState(null);
-const[hoverCoords,setHoverCoords]=useState(null);
-const[hoverCountry,setHoverCountry]=useState(null);
-const[zoomLevel,setZoomLevel]=useState(1);
-const zoomB=useRef(null);
-const projR=useRef(null);
-const W=960,H=540;
-
-useEffect(()=>{
-fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-.then(r=>r.json()).then(topo=>{
-const countries=topojson.feature(topo,topo.objects.countries);
-const borders=topojson.mesh(topo,topo.objects.countries,(a,b)=>a!==b);
-setWorldData({countries,borders});
-}).catch(e=>console.error(e));
-},[]);
-
-useEffect(()=>{
-if(!svgRef.current)return;
-const svg=d3.select(svgRef.current);
-const proj=d3.geoNaturalEarth1().scale(165).translate([W/2,H/2+10]);
-projR.current=proj;
-const zoom=d3.zoom().scaleExtent([1,10]).translateExtent([[-300,-200],[W+300,H+200]])
-.on("zoom",ev=>{svg.select("#mg").attr("transform",ev.transform);setZoomLevel(ev.transform.k);});
-zoomB.current=zoom;
-svg.call(zoom);
-svg.on("mousemove",ev=>{
-const[mx,my]=d3.pointer(ev);const t=d3.zoomTransform(svgRef.current);
-const c=proj.invert(t.invert([mx,my]));
-if(c&&!isNaN(c[0])&&!isNaN(c[1]))setHoverCoords({lat:c[1].toFixed(2),lng:c[0].toFixed(2),x:mx,y:my});
-});
-svg.on("mouseleave",()=>{setHoverCoords(null);setHoverCountry(null);});
-return()=>{svg.on(".zoom",null);svg.on("mousemove",null);svg.on("mouseleave",null);};
-},[]);
-
-const flyTo=useCallback(geo=>{
-if(!svgRef.current||!projR.current||!zoomB.current)return;
-const svg=d3.select(svgRef.current);
-const[px,py]=projR.current([geo.lng,geo.lat]);const s=4;
-svg.transition().duration(1200).ease(d3.easeCubicInOut)
-.call(zoomB.current.transform,d3.zoomIdentity.translate(W/2-px*s,H/2-py*s).scale(s));
-setActiveGeo(geo);
-},[setActiveGeo]);
-
-const resetZoom=useCallback(()=>{
-if(!svgRef.current||!zoomB.current)return;
-d3.select(svgRef.current).transition().duration(800).ease(d3.easeCubicInOut)
-.call(zoomB.current.transform,d3.zoomIdentity);
-setActiveGeo(null);
-},[setActiveGeo]);
-
-const proj=d3.geoNaturalEarth1().scale(165).translate([W/2,H/2+10]);
-const pathG=d3.geoPath(proj);
-const hqP=proj([HQ.lng,HQ.lat]);
-
-return(
-<div style={{position:"relative"}}>
-<svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:"auto",maxHeight:560,cursor:"grab",borderRadius:14,background:"radial-gradient(ellipse at 50% 40%,#12101f,#0a0812)"}}>
-<defs>
-<radialGradient id="hqG" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#a78bfa" stopOpacity="0.5"/><stop offset="100%" stopColor="#a78bfa" stopOpacity="0"/></radialGradient>
-<filter id="mg2" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<filter id="cg" x="-2%" y="-2%" width="104%" height="104%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#7c3aed" stopOpacity="0.7"/><stop offset="50%" stopColor="#a78bfa" stopOpacity="0.15"/><stop offset="100%" stopColor="#7c3aed" stopOpacity="0.7"/></linearGradient>
-{GEOS.map(g=><radialGradient key={`r-${g.id}`} id={`rg-${g.id}`} cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={g.color} stopOpacity="0.4"/><stop offset="100%" stopColor={g.color} stopOpacity="0"/></radialGradient>)}
-</defs>
-<g id="mg">
-<path d={pathG({type:"Sphere"})} fill="#0d0b19" stroke="rgba(167,139,250,0.06)" strokeWidth="0.5"/>
-<path d={pathG(d3.geoGraticule10())} fill="none" stroke="rgba(167,139,250,0.04)" strokeWidth="0.3"/>
-{worldData&&worldData.countries.features.map((f,i)=>{
-const cId=f.id;const isT=TARGET_IDS.has(cId);const gD=TARGET_MAP[cId];
-const isA=activeGeo&&gD&&activeGeo.id===gD.id;const isH=hoverCountry===cId;
-return <path key={i} d={pathG(f)}
-fill={isA?"rgba(124,58,237,0.35)":isT?"rgba(124,58,237,0.18)":isH?"rgba(255,255,255,0.06)":"rgba(255,255,255,0.03)"}
-stroke={isA?"rgba(167,139,250,0.6)":isT?"rgba(167,139,250,0.3)":"rgba(255,255,255,0.08)"}
-strokeWidth={isT?"0.8":"0.3"} filter={isA?"url(#cg)":undefined}
-style={{cursor:isT?"pointer":"default",transition:"fill 0.4s,stroke 0.4s"}}
-onMouseEnter={()=>setHoverCountry(cId)} onMouseLeave={()=>setHoverCountry(null)}
-onClick={()=>{if(isT&&gD)flyTo(gD);}}/>;
-})}
-{worldData&&<path d={pathG(worldData.borders)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" strokeLinejoin="round"/>}
-{hqP&&GEOS.map(geo=>{
-const tp=proj([geo.lng,geo.lat]);if(!tp)return null;
-const[x1,y1]=hqP;const[x2,y2]=tp;const mx=(x1+x2)/2;const my=Math.min(y1,y2)-Math.abs(x2-x1)*0.18;
-const pD=`M${x1},${y1} Q${mx},${my} ${x2},${y2}`;const isA=activeGeo?.id===geo.id;
-return <g key={`a-${geo.id}`}>
-<path d={pD} fill="none" stroke="url(#ag)" strokeWidth={isA?"1.5":"0.8"} strokeDasharray="5 5" opacity={isA?0.9:0.2} style={{transition:"opacity 0.5s"}}/>
-<circle r="2.5" fill={geo.color} opacity={isA?1:0.4}><animateMotion dur={`${3+Math.random()*2}s`} repeatCount="indefinite" path={pD}/></circle>
-{isA&&<circle r="1.5" fill="#fff" opacity="0.7"><animateMotion dur={`${4+Math.random()*2}s`} repeatCount="indefinite" path={pD}/></circle>}
-</g>;
-})}
-{hqP&&<g><circle cx={hqP[0]} cy={hqP[1]} r="24" fill="url(#hqG)"/><circle cx={hqP[0]} cy={hqP[1]} r="5" fill="#7c3aed" stroke="#c4b5fd" strokeWidth="1.5"/>
-<text x={hqP[0]} y={hqP[1]-11} textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="700" fontFamily="'DM Sans',sans-serif" style={{textShadow:"0 0 8px rgba(124,58,237,0.6)"}}>CURAÇAO HQ</text></g>}
-{GEOS.map((geo,i)=>{
-const p=proj([geo.lng,geo.lat]);if(!p)return null;const[cx,cy]=p;const isA=activeGeo?.id===geo.id;
-return <g key={`m-${geo.id}`} style={{cursor:"pointer"}} onClick={()=>flyTo(geo)}>
-<circle cx={cx} cy={cy} r="45" fill={`url(#rg-${geo.id})`} opacity={isA?1:0.4} style={{transition:"opacity 0.5s"}}/>
-<circle cx={cx} cy={cy} r={isA?8:6} fill={geo.color} opacity="0.85" filter="url(#mg2)"><animate attributeName="r" values={isA?"8;11;8":"6;8;6"} dur="3s" begin={`${i*0.4}s`} repeatCount="indefinite"/></circle>
-<circle cx={cx} cy={cy} r="3.5" fill="#fff" opacity="0.9"/>
-<circle cx={cx} cy={cy} r="6" fill="none" stroke={geo.color} strokeWidth="1.2" opacity="0"><animate attributeName="r" values="6;30" dur="2.5s" begin={`${i*0.5}s`} repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0" dur="2.5s" begin={`${i*0.5}s`} repeatCount="indefinite"/></circle>
-<g><rect x={cx+14} y={cy-14} width={geo.name.length*7.5+20} height="26" rx="6" fill="rgba(10,8,18,0.92)" stroke={isA?geo.color:"rgba(167,139,250,0.2)"} strokeWidth="0.8"/>
-<text x={cx+24} y={cy+2} fill={isA?"#e9d5ff":"#c4b5fd"} fontSize="10" fontWeight="600" fontFamily="'DM Sans',sans-serif">{geo.name}</text></g>
-</g>;
-})}
-</g>
-{hoverCoords&&<g style={{pointerEvents:"none"}}><rect x={hoverCoords.x+16} y={hoverCoords.y-10} width="150" height="22" rx="5" fill="rgba(10,8,18,0.9)" stroke="rgba(167,139,250,0.15)" strokeWidth="0.5"/>
-<text x={hoverCoords.x+24} y={hoverCoords.y+5} fill="#7c3aed" fontSize="10" fontFamily="'JetBrains Mono',monospace" fontWeight="500">
-{Math.abs(parseFloat(hoverCoords.lat)).toFixed(2)}°{parseFloat(hoverCoords.lat)>=0?"N":"S"} {Math.abs(parseFloat(hoverCoords.lng)).toFixed(2)}°{parseFloat(hoverCoords.lng)>=0?"E":"W"}</text></g>}
-<g style={{pointerEvents:"none"}}><rect x={W-62} y={H-30} width="50" height="20" rx="4" fill="rgba(10,8,18,0.7)" stroke="rgba(167,139,250,0.1)" strokeWidth="0.5"/>
-<text x={W-37} y={H-16} textAnchor="middle" fill="rgba(167,139,250,0.4)" fontSize="10" fontFamily="'JetBrains Mono',monospace">{zoomLevel.toFixed(1)}x</text></g>
-{!worldData&&<text x={W/2} y={H/2} textAnchor="middle" fill="#6b7280" fontSize="14" fontFamily="'DM Sans',sans-serif">Loading world map...</text>}
-</svg>
-<div style={{display:"flex",gap:8,justifyContent:"center",marginTop:18,flexWrap:"wrap"}}>
-<button onClick={resetZoom} style={{padding:"7px 16px",borderRadius:100,cursor:"pointer",background:!activeGeo?"rgba(124,58,237,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${!activeGeo?"rgba(124,58,237,0.25)":"rgba(255,255,255,0.06)"}`,color:!activeGeo?"#c4b5fd":"#6b7280",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",transition:"all 0.3s"}}>All Markets</button>
-{GEOS.map(geo=><button key={geo.id} onClick={()=>flyTo(geo)} style={{padding:"7px 16px",borderRadius:100,cursor:"pointer",background:activeGeo?.id===geo.id?"rgba(124,58,237,0.12)":"rgba(255,255,255,0.02)",border:`1px solid ${activeGeo?.id===geo.id?"rgba(124,58,237,0.25)":"rgba(255,255,255,0.06)"}`,color:activeGeo?.id===geo.id?"#c4b5fd":"#6b7280",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",transition:"all 0.3s"}}>
-<span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:geo.color,marginRight:7,verticalAlign:"middle"}}/>{geo.name}</button>)}
-</div>
-{activeGeo&&<div style={{position:"absolute",top:16,right:16,width:240,background:"rgba(10,8,18,0.94)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:14,padding:"20px 22px",backdropFilter:"blur(20px)",animation:"fadeInUp 0.35s ease"}}>
-<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-<div style={{width:12,height:12,borderRadius:"50%",background:activeGeo.color,boxShadow:`0 0 14px ${activeGeo.color}`}}/>
-<span style={{color:"#f5f3ff",fontSize:17,fontWeight:700,fontFamily:"'Playfair Display',serif"}}>{activeGeo.name}</span></div>
-{[["Region",activeGeo.region],["Population",activeGeo.pop],["Products",activeGeo.products.join(", ")],["Coordinates",`${activeGeo.lat}°, ${activeGeo.lng}°`]].map(([k,v])=>
-<div key={k} style={{display:"flex",justifyContent:"space-between",marginBottom:9}}>
-<span style={{color:"#6b7280",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>{k}</span>
-<span style={{color:"#d1d5db",fontSize:12,fontWeight:500,fontFamily:k==="Coordinates"?"'JetBrains Mono',monospace":"'DM Sans',sans-serif"}}>{v}</span></div>)}
-</div>}
-</div>);
-}
 
 function GlowIcon({children,size=48}){return<div style={{width:size,height:size,borderRadius:14,flexShrink:0,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.15)",display:"flex",alignItems:"center",justifyContent:"center",color:"#a78bfa",fontSize:size*0.38,fontWeight:800,fontFamily:"'Playfair Display',serif"}}>{children}</div>;}
 function ProductCard({symbol,title,desc,features,badge}){const[h,setH]=useState(false);return<div onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} style={{background:h?"rgba(124,58,237,0.05)":"rgba(255,255,255,0.015)",border:`1px solid ${h?"rgba(167,139,250,0.22)":"rgba(255,255,255,0.05)"}`,borderRadius:18,padding:"34px 28px",flex:1,minWidth:270,transition:"all 0.5s cubic-bezier(0.4,0,0.2,1)",transform:h?"translateY(-5px)":"translateY(0)",position:"relative",overflow:"hidden"}}>
@@ -196,7 +55,7 @@ function TechBlock({symbol,title,desc}){const[h,setH]=useState(false);return<div
 function CountUp({target}){const[val,setVal]=useState("0");const ref=useRef(null);const started=useRef(false);useEffect(()=>{const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting&&!started.current){started.current=true;const n=parseInt(target);if(!isNaN(n)&&n<1000){let c=0;const s=Math.max(1,Math.floor(n/40));const iv=setInterval(()=>{c+=s;if(c>=n){c=n;clearInterval(iv);}setVal(c.toString());},30);}else setVal(target);}},{threshold:0.5});if(ref.current)obs.observe(ref.current);return()=>obs.disconnect();},[target]);return<span ref={ref}>{val}</span>;}
 
 function LunariLanding(){
-const[scrolled,setScrolled]=useState(false);const[activeGeo,setActiveGeo]=useState(null);
+const[scrolled,setScrolled]=useState(false);
 const[menuOpen,setMenuOpen]=useState(false);
 useEffect(()=>{const fn=()=>setScrolled(window.scrollY>40);window.addEventListener("scroll",fn);return()=>window.removeEventListener("scroll",fn);},[]);
 
@@ -205,7 +64,7 @@ return(
 <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,padding:"0 48px",height:68,display:"flex",alignItems:"center",justifyContent:"space-between",background:scrolled||menuOpen?"rgba(10,8,18,0.95)":"transparent",backdropFilter:scrolled||menuOpen?"blur(24px)":"none",borderBottom:scrolled?"1px solid rgba(167,139,250,0.08)":"none",transition:"all 0.4s"}}>
 <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",fontFamily:"'Playfair Display',serif"}}>L</div><span style={{fontSize:20,fontWeight:700,color:"#f5f3ff",fontFamily:"'Playfair Display',serif"}}>Lunari</span></div>
 <div className="nav-links" style={{display:"flex",gap:26,alignItems:"center"}}>
-{["Markets","Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
+{["Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
 </div>
 <button className="nav-burger" onClick={()=>setMenuOpen(!menuOpen)} style={{display:"none",alignItems:"center",justifyContent:"center",width:40,height:40,background:"none",border:"none",cursor:"pointer",flexDirection:"column",gap:menuOpen?0:5,position:"relative"}}>
 <span style={{width:22,height:2,background:"#c4b5fd",borderRadius:2,transition:"all 0.3s",transform:menuOpen?"rotate(45deg) translateY(0)":"none",position:menuOpen?"absolute":"relative"}}/>
@@ -214,7 +73,7 @@ return(
 </button>
 </nav>
 {menuOpen&&<div className="nav-mobile" onClick={()=>setMenuOpen(false)} style={{display:"none",position:"fixed",top:68,left:0,right:0,zIndex:99,background:"rgba(10,8,18,0.97)",backdropFilter:"blur(24px)",borderBottom:"1px solid rgba(167,139,250,0.1)",flexDirection:"column",alignItems:"center",gap:0,padding:"8px 0",animation:"fadeInUp 0.25s ease"}}>
-{["Markets","Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#d1d5db",fontSize:15,textDecoration:"none",fontWeight:500,padding:"16px 0",width:"100%",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{item}</a>)}
+{["Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#d1d5db",fontSize:15,textDecoration:"none",fontWeight:500,padding:"16px 0",width:"100%",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{item}</a>)}
 </div>}
 
 <section style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"120px 48px 80px",overflow:"hidden"}}>
@@ -222,14 +81,13 @@ return(
 <div style={{position:"absolute",top:"50%",left:"50%",width:0,height:0,pointerEvents:"none"}}>{[0,1,2].map(i=><div key={i} style={{position:"absolute",width:4,height:4,borderRadius:"50%",background:"#7c3aed",opacity:0.3,animation:`orbit ${8+i*4}s linear infinite`,animationDelay:`${i*2}s`}}/>)}</div>
 <div style={{position:"absolute",inset:0,pointerEvents:"none",backgroundImage:"radial-gradient(rgba(167,139,250,0.04) 1px,transparent 1px)",backgroundSize:"48px 48px",animation:"pulse 8s ease infinite"}}/>
 <div style={{padding:"5px 18px",borderRadius:100,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.2)",marginBottom:28,animation:"fadeInUp 0.8s ease"}}><span style={{color:"#a78bfa",fontSize:12,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase"}}>Launching Q3 2026 · Curaçao Licensed</span></div>
-<h1 style={{fontSize:"clamp(36px,5.2vw,66px)",fontWeight:800,textAlign:"center",lineHeight:1.06,maxWidth:840,marginBottom:24,fontFamily:"'Playfair Display',serif",animation:"fadeInUp 0.8s ease 0.1s both"}}>Next-Generation{" "}<span style={{background:"linear-gradient(135deg,#c4b5fd,#7c3aed,#a78bfa,#c4b5fd)",backgroundSize:"300% auto",animation:"shimmer 5s linear infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGaming Platform</span>{" "}for Emerging Markets</h1>
+<h1 style={{fontSize:"clamp(36px,5.2vw,66px)",fontWeight:800,textAlign:"center",lineHeight:1.06,maxWidth:840,marginBottom:24,fontFamily:"'Playfair Display',serif",animation:"fadeInUp 0.8s ease 0.1s both"}}>Next-Generation{" "}<span style={{background:"linear-gradient(135deg,#c4b5fd,#7c3aed,#a78bfa,#c4b5fd)",backgroundSize:"300% auto",animation:"shimmer 5s linear infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGaming Operator</span>{" "}for Emerging Markets</h1>
 <p style={{fontSize:17,color:"#9ca3af",textAlign:"center",maxWidth:560,lineHeight:1.75,marginBottom:44,animation:"fadeInUp 0.8s ease 0.2s both"}}>AI-driven player protection. Multi-market compliance. Seamless provider integrations across Latin America, India, and CIS.</p>
 
 <div style={{display:"flex",gap:40,marginTop:72,flexWrap:"wrap",justifyContent:"center",animation:"fadeInUp 0.8s ease 0.4s both"}}>{STATS.map((s,i)=><div key={i} style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:"#c4b5fd",fontFamily:"'Playfair Display',serif"}}><CountUp target={s.value}/></div><div style={{fontSize:12,color:"#6b7280",marginTop:3,fontWeight:500}}>{s.label}</div></div>)}</div>
 </section>
 
-<section id="markets" style={{padding:"100px 48px"}}><div style={{textAlign:"center",marginBottom:44}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Global Reach</span><h2 style={{fontSize:"clamp(26px,3.4vw,42px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:12}}>Market Coverage</h2><p style={{color:"#9ca3af",fontSize:15,maxWidth:500,margin:"0 auto",lineHeight:1.7}}>Drag, zoom, and click to explore. Target markets highlighted with real-time coordinates.</p></div>
-<div style={{maxWidth:1020,margin:"0 auto",border:"1px solid rgba(255,255,255,0.04)",borderRadius:20,padding:"20px 16px 14px",background:"rgba(255,255,255,0.008)"}}><InteractiveMap activeGeo={activeGeo} setActiveGeo={setActiveGeo}/></div></section>
+
 
 <section id="products" style={{padding:"100px 48px"}}><div style={{textAlign:"center",marginBottom:48}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Product Verticals</span><h2 style={{fontSize:"clamp(26px,3.4vw,42px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:12}}>Complete Gaming Ecosystem</h2><p style={{color:"#9ca3af",fontSize:15,maxWidth:520,margin:"0 auto",lineHeight:1.7}}>Casino, live dealer, and sportsbook experiences tailored for each market.</p></div>
 <div style={{display:"flex",gap:20,maxWidth:1100,margin:"0 auto",flexWrap:"wrap"}}>
@@ -240,7 +98,7 @@ return(
 
 <section id="technology" style={{padding:"100px 48px",background:"linear-gradient(180deg,transparent,rgba(124,58,237,0.02) 50%,transparent)"}}>
 <div style={{maxWidth:1100,margin:"0 auto",display:"flex",gap:52,flexWrap:"wrap",alignItems:"flex-start"}}>
-<div style={{flex:"1 1 460px"}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Platform Architecture</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Built for Scale, <span style={{color:"#a78bfa"}}>Secured by AI</span></h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7,marginBottom:24}}>Proprietary stack for multi-jurisdictional compliance, real-time fraud prevention, and sub-second processing.</p>
+<div style={{flex:"1 1 460px"}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Technology Stack</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Built for Scale, <span style={{color:"#a78bfa"}}>Secured by AI</span></h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7,marginBottom:24}}>Proprietary stack for multi-jurisdictional compliance, real-time fraud prevention, and sub-second processing.</p>
 <TechBlock symbol="F" title="AI Fraud Detection" desc="Hybrid ML: XGBoost + Random Forest + LSTM with configurable rules. 200+ behavioral signals in real-time."/>
 <TechBlock symbol="K" title="Multi-Market Compliance" desc="Automated KYC/AML per jurisdiction. Built-in responsible gambling and regulatory reporting."/>
 <TechBlock symbol="A" title="Universal Aggregation API" desc="Single-API provider integration. GCB, RGS, proprietary protocols. 48h average integration."/>
