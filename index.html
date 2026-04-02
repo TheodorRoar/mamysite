@@ -206,7 +206,6 @@ return(
 <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",fontFamily:"'Playfair Display',serif"}}>L</div><span style={{fontSize:20,fontWeight:700,color:"#f5f3ff",fontFamily:"'Playfair Display',serif"}}>Lunari</span></div>
 <div className="nav-links" style={{display:"flex",gap:26,alignItems:"center"}}>
 {["Markets","Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
-<a href="mailto:partners@lunari.io" style={{padding:"8px 20px",borderRadius:8,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:13,fontWeight:600,textDecoration:"none",boxShadow:"0 0 20px rgba(124,58,237,0.25)"}}>Contact Us</a>
 </div>
 <button className="nav-burger" onClick={()=>setMenuOpen(!menuOpen)} style={{display:"none",alignItems:"center",justifyContent:"center",width:40,height:40,background:"none",border:"none",cursor:"pointer",flexDirection:"column",gap:menuOpen?0:5,position:"relative"}}>
 <span style={{width:22,height:2,background:"#c4b5fd",borderRadius:2,transition:"all 0.3s",transform:menuOpen?"rotate(45deg) translateY(0)":"none",position:menuOpen?"absolute":"relative"}}/>
@@ -216,7 +215,6 @@ return(
 </nav>
 {menuOpen&&<div className="nav-mobile" onClick={()=>setMenuOpen(false)} style={{display:"none",position:"fixed",top:68,left:0,right:0,zIndex:99,background:"rgba(10,8,18,0.97)",backdropFilter:"blur(24px)",borderBottom:"1px solid rgba(167,139,250,0.1)",flexDirection:"column",alignItems:"center",gap:0,padding:"8px 0",animation:"fadeInUp 0.25s ease"}}>
 {["Markets","Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#d1d5db",fontSize:15,textDecoration:"none",fontWeight:500,padding:"16px 0",width:"100%",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{item}</a>)}
-<a href="mailto:partners@lunari.io" style={{margin:"16px 20px",padding:"12px 0",borderRadius:10,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:14,fontWeight:600,textDecoration:"none",textAlign:"center",width:"calc(100% - 40px)",boxShadow:"0 0 20px rgba(124,58,237,0.25)"}}>Contact Us</a>
 </div>}
 
 <section style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"120px 48px 80px",overflow:"hidden"}}>
@@ -226,7 +224,7 @@ return(
 <div style={{padding:"5px 18px",borderRadius:100,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.2)",marginBottom:28,animation:"fadeInUp 0.8s ease"}}><span style={{color:"#a78bfa",fontSize:12,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase"}}>Launching Q3 2026 · Curaçao Licensed</span></div>
 <h1 style={{fontSize:"clamp(36px,5.2vw,66px)",fontWeight:800,textAlign:"center",lineHeight:1.06,maxWidth:840,marginBottom:24,fontFamily:"'Playfair Display',serif",animation:"fadeInUp 0.8s ease 0.1s both"}}>Next-Generation{" "}<span style={{background:"linear-gradient(135deg,#c4b5fd,#7c3aed,#a78bfa,#c4b5fd)",backgroundSize:"300% auto",animation:"shimmer 5s linear infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGaming Platform</span>{" "}for Emerging Markets</h1>
 <p style={{fontSize:17,color:"#9ca3af",textAlign:"center",maxWidth:560,lineHeight:1.75,marginBottom:44,animation:"fadeInUp 0.8s ease 0.2s both"}}>AI-driven player protection. Multi-market compliance. Seamless provider integrations across Latin America, India, and CIS.</p>
-<div style={{display:"flex",gap:14,animation:"fadeInUp 0.8s ease 0.3s both"}}><a href="mailto:partners@lunari.io" style={{padding:"13px 32px",borderRadius:10,background:"linear-gradient(135deg,#7c3aed,#6d28d9)",color:"#fff",fontSize:15,fontWeight:600,textDecoration:"none",boxShadow:"0 4px 30px rgba(124,58,237,0.3)"}}>Get in Touch</a></div>
+
 <div style={{display:"flex",gap:40,marginTop:72,flexWrap:"wrap",justifyContent:"center",animation:"fadeInUp 0.8s ease 0.4s both"}}>{STATS.map((s,i)=><div key={i} style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:"#c4b5fd",fontFamily:"'Playfair Display',serif"}}><CountUp target={s.value}/></div><div style={{fontSize:12,color:"#6b7280",marginTop:3,fontWeight:500}}>{s.label}</div></div>)}</div>
 </section>
 
