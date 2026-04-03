@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lunari Next-Gen iGaming Operator</title>
+<title>Lunari — Next-Gen iGaming Operator</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237c3aed'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='serif' font-size='20' font-weight='800' fill='white'>L</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -64,7 +64,7 @@ return(
 <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:100,padding:"0 48px",height:68,display:"flex",alignItems:"center",justifyContent:"space-between",background:scrolled||menuOpen?"rgba(10,8,18,0.95)":"transparent",backdropFilter:scrolled||menuOpen?"blur(24px)":"none",borderBottom:scrolled?"1px solid rgba(167,139,250,0.08)":"none",transition:"all 0.4s"}}>
 <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,borderRadius:9,background:"linear-gradient(135deg,#7c3aed,#a78bfa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",fontFamily:"'Playfair Display',serif"}}>L</div><span style={{fontSize:20,fontWeight:700,color:"#f5f3ff",fontFamily:"'Playfair Display',serif"}}>Lunari</span></div>
 <div className="nav-links" style={{display:"flex",gap:26,alignItems:"center"}}>
-{["Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
+{["Products","About"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#9ca3af",fontSize:13,textDecoration:"none",fontWeight:500,transition:"color 0.2s"}} onMouseEnter={e=>e.target.style.color="#c4b5fd"} onMouseLeave={e=>e.target.style.color="#9ca3af"}>{item}</a>)}
 </div>
 <button className="nav-burger" onClick={()=>setMenuOpen(!menuOpen)} style={{display:"none",alignItems:"center",justifyContent:"center",width:40,height:40,background:"none",border:"none",cursor:"pointer",flexDirection:"column",gap:menuOpen?0:5,position:"relative"}}>
 <span style={{width:22,height:2,background:"#c4b5fd",borderRadius:2,transition:"all 0.3s",transform:menuOpen?"rotate(45deg) translateY(0)":"none",position:menuOpen?"absolute":"relative"}}/>
@@ -73,7 +73,7 @@ return(
 </button>
 </nav>
 {menuOpen&&<div className="nav-mobile" onClick={()=>setMenuOpen(false)} style={{display:"none",position:"fixed",top:68,left:0,right:0,zIndex:99,background:"rgba(10,8,18,0.97)",backdropFilter:"blur(24px)",borderBottom:"1px solid rgba(167,139,250,0.1)",flexDirection:"column",alignItems:"center",gap:0,padding:"8px 0",animation:"fadeInUp 0.25s ease"}}>
-{["Products","Technology"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#d1d5db",fontSize:15,textDecoration:"none",fontWeight:500,padding:"16px 0",width:"100%",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{item}</a>)}
+{["Products","About"].map(item=><a key={item} href={`#${item.toLowerCase()}`} style={{color:"#d1d5db",fontSize:15,textDecoration:"none",fontWeight:500,padding:"16px 0",width:"100%",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>{item}</a>)}
 </div>}
 
 <section style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",padding:"120px 48px 80px",overflow:"hidden"}}>
@@ -82,7 +82,7 @@ return(
 <div style={{position:"absolute",inset:0,pointerEvents:"none",backgroundImage:"radial-gradient(rgba(167,139,250,0.04) 1px,transparent 1px)",backgroundSize:"48px 48px",animation:"pulse 8s ease infinite"}}/>
 <div style={{padding:"5px 18px",borderRadius:100,background:"rgba(124,58,237,0.08)",border:"1px solid rgba(124,58,237,0.2)",marginBottom:28,animation:"fadeInUp 0.8s ease"}}><span style={{color:"#a78bfa",fontSize:12,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase"}}>Launching Q3 2026 · Curaçao Licensed</span></div>
 <h1 style={{fontSize:"clamp(36px,5.2vw,66px)",fontWeight:800,textAlign:"center",lineHeight:1.06,maxWidth:840,marginBottom:24,fontFamily:"'Playfair Display',serif",animation:"fadeInUp 0.8s ease 0.1s both"}}>Next-Generation{" "}<span style={{background:"linear-gradient(135deg,#c4b5fd,#7c3aed,#a78bfa,#c4b5fd)",backgroundSize:"300% auto",animation:"shimmer 5s linear infinite",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>iGaming Operator</span>{" "}for Emerging Markets</h1>
-<p style={{fontSize:17,color:"#9ca3af",textAlign:"center",maxWidth:560,lineHeight:1.75,marginBottom:44,animation:"fadeInUp 0.8s ease 0.2s both"}}>AI-driven player protection. Multi-market compliance. Seamless provider integrations across Latin America, India, and CIS.</p>
+<p style={{fontSize:17,color:"#9ca3af",textAlign:"center",maxWidth:560,lineHeight:1.75,marginBottom:44,animation:"fadeInUp 0.8s ease 0.2s both"}}>AI-driven player protection. Multi-market localization. Premium gaming experiences across Latin America, India, and CIS.</p>
 
 <div style={{display:"flex",gap:40,marginTop:72,flexWrap:"wrap",justifyContent:"center",animation:"fadeInUp 0.8s ease 0.4s both"}}>{STATS.map((s,i)=><div key={i} style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:"#c4b5fd",fontFamily:"'Playfair Display',serif"}}><CountUp target={s.value}/></div><div style={{fontSize:12,color:"#6b7280",marginTop:3,fontWeight:500}}>{s.label}</div></div>)}</div>
 </section>
@@ -96,23 +96,23 @@ return(
 <ProductCard symbol="S" title="Sportsbook" badge="KZ MARKET" desc="Comprehensive pre-match and live betting focused on the regulated Kazakhstan market." features={["30+ sports, 60K+ monthly events","In-play with cash-out","Regional sport prioritization","Full regulatory compliance"]}/>
 </div></section>
 
-<section id="technology" style={{padding:"100px 48px",background:"linear-gradient(180deg,transparent,rgba(124,58,237,0.02) 50%,transparent)"}}>
+<section id="about" style={{padding:"100px 48px",background:"linear-gradient(180deg,transparent,rgba(124,58,237,0.02) 50%,transparent)"}}>
 <div style={{maxWidth:1100,margin:"0 auto",display:"flex",gap:52,flexWrap:"wrap",alignItems:"flex-start"}}>
-<div style={{flex:"1 1 460px"}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Technology Stack</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Built for Scale, <span style={{color:"#a78bfa"}}>Secured by AI</span></h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7,marginBottom:24}}>Proprietary stack for multi-jurisdictional compliance, real-time fraud prevention, and sub-second processing.</p>
-<TechBlock symbol="F" title="AI Fraud Detection" desc="Hybrid ML: XGBoost + Random Forest + LSTM with configurable rules. 200+ behavioral signals in real-time."/>
-<TechBlock symbol="K" title="Multi-Market Compliance" desc="Automated KYC/AML per jurisdiction. Built-in responsible gambling and regulatory reporting."/>
-<TechBlock symbol="A" title="Universal Aggregation API" desc="Single-API provider integration. GCB, RGS, proprietary protocols. 48h average integration."/>
-<TechBlock symbol="P" title="Omni-Payment Hub" desc="200+ methods: PIX, UPI, local cards, crypto wallets, carrier billing across all geos."/>
-<TechBlock symbol="I" title="Microservices Architecture" desc="Cloud-native, 99.99% uptime. Independent per-market scaling, sub-50ms API response."/>
+<div style={{flex:"1 1 460px"}}><span style={{color:"#7c3aed",fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",display:"block",marginBottom:10}}>Why Lunari</span><h2 style={{fontSize:"clamp(26px,3.4vw,38px)",fontWeight:700,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Built for Players, <span style={{color:"#a78bfa"}}>Driven by Data</span></h2><p style={{color:"#9ca3af",fontSize:14,lineHeight:1.7,marginBottom:24}}>A new-generation operator combining deep market expertise, localized player experiences, and aggressive go-to-market strategy across high-growth regions.</p>
+<TechBlock symbol="L" title="Full Market Localization" desc="Native-language interfaces, local payment methods, culturally adapted content curation, and region-specific promotions for every target market."/>
+<TechBlock symbol="V" title="VIP & Loyalty Programs" desc="Tiered loyalty engine with personalized rewards, cashback mechanics, tournaments, and exclusive content drops to maximize LTV and retention."/>
+<TechBlock symbol="P" title="200+ Payment Methods" desc="PIX and Boleto in Brazil, UPI and Paytm in India, Kaspi in Kazakhstan, UZCARD in Uzbekistan, plus crypto wallets and USDT across all geos."/>
+<TechBlock symbol="M" title="Performance Marketing" desc="In-house acquisition team with proven LatAm and CIS expertise. SEO, paid media, affiliate networks, and influencer partnerships from day one."/>
+<TechBlock symbol="R" title="Responsible Gaming" desc="Built-in self-exclusion, deposit limits, session timers, and reality checks. Full compliance with Curaçao eGaming responsible gambling requirements."/>
 </div>
 <div style={{flex:"1 1 380px",minWidth:320}}>
 <div style={{background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:18,padding:"26px 24px",position:"relative",overflow:"hidden"}}>
 <div style={{position:"absolute",top:-50,right:-50,width:150,height:150,borderRadius:"50%",background:"radial-gradient(circle,rgba(124,58,237,0.07),transparent 70%)"}}/>
-<h4 style={{color:"#a78bfa",fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:20}}>Architecture Overview</h4>
-{[["Player Layer",["Web App","Mobile iOS/Android","Telegram Mini App"]],["Gateway",["CDN + WAF","Load Balancer","API Gateway"]],["Core Services",["Game Aggregator","Wallet Engine","Bonus System","Sportsbook"]],["Intelligence",["Fraud Detection AI","Player Analytics","Recommendations"]],["Data & Compliance",["Multi-Region DB","KYC/AML Pipeline","Regulatory Reports"]]].map(([label,items],i,arr)=>
+<h4 style={{color:"#a78bfa",fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:20}}>Operator at a Glance</h4>
+{[["Markets",["Brazil","Mexico","India","Uzbekistan","Kazakhstan"]],["Products",["Online Casino","Live Casino","Sportsbook (KZ)"]],["Player Acquisition",["SEO & ASO","Paid Media","Affiliate Networks","Influencer Campaigns"]],["Player Experience",["Gamification","VIP Tiers","Tournaments","Cashback & Bonuses"]],["Compliance",["Curaçao eGaming","KYC/AML","Responsible Gaming","Geo-Fencing"]]].map(([label,items],i,arr)=>
 <div key={i} style={{marginBottom:i<arr.length-1?4:0}}><div style={{color:"#7c3aed",fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:5}}>{label}</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{items.map((item,j)=><span key={j} style={{padding:"3px 10px",borderRadius:5,background:"rgba(124,58,237,0.06)",border:"1px solid rgba(124,58,237,0.1)",color:"#c4b5fd",fontSize:10.5,fontWeight:500}}>{item}</span>)}</div>{i<arr.length-1&&<div style={{textAlign:"center",color:"rgba(124,58,237,0.18)",fontSize:13,margin:"5px 0 2px"}}>↓</div>}</div>)}
 </div>
-<div style={{marginTop:18,display:"flex",gap:8,flexWrap:"wrap"}}>{["Curaçao eGaming","GLI-19 Tested","ISO 27001","PCI DSS L1"].map((b,i)=><div key={i} style={{padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",color:"#9ca3af",fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><span style={{color:"#22c55e",fontSize:10}}>✓</span>{b}</div>)}</div>
+<div style={{marginTop:18,display:"flex",gap:8,flexWrap:"wrap"}}>{["Curaçao eGaming","Responsible Gaming","Multi-Currency","Crypto Accepted"].map((b,i)=><div key={i} style={{padding:"8px 14px",borderRadius:9,background:"rgba(255,255,255,0.015)",border:"1px solid rgba(255,255,255,0.05)",color:"#9ca3af",fontSize:11,fontWeight:600,display:"flex",alignItems:"center",gap:5}}><span style={{color:"#22c55e",fontSize:10}}>✓</span>{b}</div>)}</div>
 </div></div></section>
 
 
